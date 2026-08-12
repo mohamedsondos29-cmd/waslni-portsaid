@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>وصلني بورسعيد | مواصلات عامة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">🚌</div>
+      <div>
+        <strong>وصلني بورسعيد</strong>
+        <span>مواصلات أسهل.. أسرع.. أوضح</span>
+      </div>
+    </div>
+    <nav>
+      <a href="#home">الرئيسية</a>
+      <a href="#routes">الرحلات</a>
+      <a href="#map">الخريطة</a>
+      <a href="#features">المميزات</a>
+    </nav>
+    <button class="icon-btn" id="notificationBtn" aria-label="التنبيهات">🔔<b id="notificationCount">3</b></button>
+  </header>
+
+  <main id="home">
+    <section class="hero container">
+      <div class="hero-copy">
+        <span class="eyebrow">🚍 Public Transport • Port Said</span>
+        <h1>تحرك في بورسعيد <span>بسهولة</span></h1>
+        <p>
+          اعرف أقرب مواصلة، شوف المواعيد، تتبع الرحلة على الخريطة،
+          واحجز تذكرتك إلكترونيًا من مكان واحد.
+        </p>
+
+        <div class="search-card">
+          <div class="field">
+            <label>من</label>
+            <input id="fromInput" placeholder="مثال: حي الشرق" />
+          </div>
+          <div class="swap">⇄</div>
+          <div class="field">
+            <label>إلى</label>
+            <input id="toInput" placeholder="مثال: الميناء" />
+          </div>
+          <button class="primary-btn" id="searchBtn">ابحث عن الرحلات</button>
+        </div>
+
+        <div class="quick-stats">
+          <div><strong>4</strong><span>خطوط متاحة</span></div>
+          <div><strong>23 د</strong><span>متوسط الرحلة</span></div>
+          <div><strong>6 ج</strong><span>متوسط التكلفة</span></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="map-mini">
+          <div class="route-line"></div>
+          <span class="pin pin-1">📍</span>
+          <span class="pin pin-2">📍</span>
+          <div class="bus-floating">🚌</div>
+        </div>
+        <div class="hero-route-info">
+          <div>
+            <small>أقرب رحلة</small>
+            <h3>خط 2 • حي الشرق → الميناء</h3>
+          </div>
+          <strong>09:25</strong>
+        </div>
+        <button class="secondary-btn" id="nearbyBtn">اعرف أقرب مواصلة</button>
+      </div>
+    </section>
+
+    <section class="container" id="routes">
+      <div class="section-title">
+        <div>
+          <span>LIVE API</span>
+          <h2>الرحلات المتاحة</h2>
+        </div>
+        <button class="outline-btn" id="refreshRoutes">↻ تحديث</button>
+      </div>
+      <div id="routesGrid" class="routes-grid">
+        <div class="loading">جاري تحميل الرحلات...</div>
+      </div>
+    </section>
+
+    <section class="container map-section" id="map">
+      <div class="section-title">
+        <div>
+          <span>INTERACTIVE MAP</span>
+          <h2>خريطة الرحلة</h2>
+        </div>
+        <div class="map-actions">
+          <button class="outline-btn" id="locateBtn">📍 موقعي</button>
+          <button class="outline-btn" id="fitBtn">عرض المسار</button>
+        </div>
+      </div>
+      <div id="leafletMap"></div>
+    </section>
+
+    <section class="container features" id="features">
+      <div class="section-title center">
+        <div>
+          <span>WHY WASLNI?</span>
+          <h2>كل اللي محتاجه في تطبيق واحد</h2>
+        </div>
+      </div>
+      <div class="feature-grid">
+        <article><div>⏱️</div><h3>مواعيد دقيقة</h3><p>اعرف موعد الوصول والرحلة القادمة بسهولة.</p></article>
+        <article><div>🗺️</div><h3>خريطة المسارات</h3><p>شوف مسار الرحلة وتابع نقاط التوقف.</p></article>
+        <article><div>🎟️</div><h3>تذاكر إلكترونية</h3><p>احجز تذكرتك واحصل على كود مرجعي فورًا.</p></article>
+        <article><div>🔔</div><h3>تنبيهات ذكية</h3><p>وصلك إشعار عند وجود تغيير في المواعيد.</p></article>
+        <article><div>💳</div><h3>التكلفة والرصيد</h3><p>اعرف تكلفة الرحلة وتابع رصيدك بسهولة.</p></article>
+        <article><div>🚏</div><h3>أقرب محطة</h3><p>ساعدك التطبيق في الوصول لأقرب محطة.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <aside class="notification-panel" id="notificationPanel">
+    <div class="panel-head">
+      <h3>التنبيهات</h3>
+      <button id="closeNotifications">×</button>
+    </div>
+    <div id="notificationList"></div>
+  </aside>
+
+  <div class="modal" id="ticketModal">
+    <div class="modal-box">
+      <button class="modal-close" id="closeModal">×</button>
+      <div class="ticket-icon">🎟️</div>
+      <h2>حجز التذكرة</h2>
+      <div id="ticketDetails"></div>
+      <button class="primary-btn full" id="confirmTicket">تأكيد الحجز</button>
+      <div id="ticketResult"></div>
+    </div>
+  </div>
+
+  <footer>
+    <strong>وصلني بورسعيد</strong>
+    <span>بورسعيد سعيد تحرك.. وإحنا معاك ❤️</span>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "waslni-portsaid",
+  "version": "1.0.0",
+  "description": "Interactive public transportation website with Express API backend",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}
