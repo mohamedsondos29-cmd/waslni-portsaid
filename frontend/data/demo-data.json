@@ -1,0 +1,42 @@
+{
+  "notice": "DEMO DATA ONLY - جميع البيانات التالية وهمية وليست بيانات عملاء حقيقيين.",
+  "customers": [
+    {"id":"CUS-1001","name":"أحمد محمد","phone":"01000000001","type":"normal","cardId":"WSC-1001","balance":75,"trips":18},
+    {"id":"CUS-1002","name":"سارة علي","phone":"01000000002","type":"accessibility","cardId":"WSC-1002","balance":120,"trips":26,"needs":["wheelchair","ramp","priority_seat"]},
+    {"id":"CUS-1003","name":"محمد حسن","phone":"01000000003","type":"normal","cardId":"WSC-1003","balance":42,"trips":9},
+    {"id":"CUS-1004","name":"نور أحمد","phone":"01000000004","type":"accessibility","cardId":"WSC-1004","balance":90,"trips":31,"needs":["visual_assistance","audio","driver_assistance"]},
+    {"id":"CUS-1005","name":"مريم خالد","phone":"01000000005","type":"normal","cardId":"WSC-1005","balance":65,"trips":14},
+    {"id":"CUS-1006","name":"عمر سامي","phone":"01000000006","type":"accessibility","cardId":"WSC-1006","balance":55,"trips":12,"needs":["mobility_assistance","ramp"]},
+    {"id":"CUS-1007","name":"ملك يوسف","phone":"01000000007","type":"normal","cardId":"WSC-1007","balance":150,"trips":37},
+    {"id":"CUS-1008","name":"يوسف محمود","phone":"01000000008","type":"accessibility","cardId":"WSC-1008","balance":80,"trips":21,"needs":["wheelchair","lift","visual_display"]}
+  ],
+  "vehicles": [
+    {"id":"BUS-101","line":"1","status":"On Time","eta":"5 min","capacity":42,"wheelchairSpaces":0,"features":["priority_seats","usb"]},
+    {"id":"BUS-107","line":"7","status":"On Time","eta":"9 min","capacity":38,"wheelchairSpaces":3,"features":["ramp","hydraulic_lift","audio","visual_display","priority_seats","driver_assistance"]},
+    {"id":"BUS-112","line":"12","status":"Delayed","eta":"14 min","capacity":40,"wheelchairSpaces":2,"features":["ramp","priority_seats","audio"]},
+    {"id":"BUS-205","line":"20","status":"On Time","eta":"7 min","capacity":45,"wheelchairSpaces":1,"features":["ramp","visual_display","priority_seats"]}
+  ],
+  "stations": [
+    {"id":"ST-01","name":"محطة بورسعيد الرئيسية","accessible":true,"ramp":true,"audio":true,"visualDisplay":true},
+    {"id":"ST-02","name":"حي العرب","accessible":true,"ramp":true,"audio":false,"visualDisplay":true},
+    {"id":"ST-03","name":"الزهور","accessible":false,"ramp":false,"audio":false,"visualDisplay":false},
+    {"id":"ST-04","name":"المناخ","accessible":true,"ramp":true,"audio":true,"visualDisplay":true}
+  ],
+  "transactions": [
+    {"id":"TX-5001","customerId":"CUS-1001","cardId":"WSC-1001","type":"trip","amount":-6,"route":"Line 1","date":"2026-08-15 08:12"},
+    {"id":"TX-5002","customerId":"CUS-1002","cardId":"WSC-1002","type":"topup","amount":50,"route":"Wallet","date":"2026-08-15 09:40"},
+    {"id":"TX-5003","customerId":"CUS-1004","cardId":"WSC-1004","type":"trip","amount":-6,"route":"Line 7","date":"2026-08-15 10:05"},
+    {"id":"TX-5004","customerId":"CUS-1007","cardId":"WSC-1007","type":"trip","amount":-8,"route":"Line 20","date":"2026-08-15 16:20"},
+    {"id":"TX-5005","customerId":"CUS-1008","cardId":"WSC-1008","type":"trip","amount":-6,"route":"Line 7","date":"2026-08-16 07:55"}
+  ],
+  "analytics": {
+    "totalCustomers":152,
+    "normalCustomers":128,
+    "accessibilityCustomers":24,
+    "activeCards":139,
+    "qrTripsToday":486,
+    "averageWaitMinutes":8,
+    "accessibleVehicles":18,
+    "topRoute":"Line 7"
+  }
+}
