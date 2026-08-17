@@ -93,13 +93,27 @@ function startLiveTracking(route) {
 
 window.openTicket = async function(id) {
   selectedRoute = allRoutes.find(r => r.id === id); if (!selectedRoute) return;
-  document.getElementById("ticketDetails").innerHTML = `<div class="ticket-summary"><strong>${selectedRoute.line}</strong><br>${selectedRoute.from} → ${selectedRoute.to}<br>الموعد: ${selectedRoute.nextDeparture}<br>المدة: ${selectedRoute.duration} دقيقة<br>التكلفة: ${selectedRoute.fare} جنيه</div>`;
+  const walletBalance = getWalletBalance();
+  document.getElementById("ticketDetails").innerHTML = `<div class="ticket-summary"><strong>${selectedRoute.line}</strong><br>${selectedRoute.from} → ${selectedRoute.to}<br>الموعد: ${selectedRoute.nextDeparture}<br>المدة: ${selectedRoute.duration} دقيقة<br>التكلفة: ${selectedRoute.fare} جنيه</div>
+    <div class="payment-box"><h4>طريقة الدفع</h4><label class="payment-option"><input type="radio" name="paymentMethod" value="wallet" checked> 💳 المحفظة الإلكترونية <span>الرصيد: ${walletBalance} ج</span></label><label class="payment-option"><input type="radio" name="paymentMethod" value="cash"> 💵 كاش عند الصعود</label><small>المحفظة هنا تجريبية للعرض، ويمكن ربطها لاحقًا ببوابة دفع حقيقية.</small></div>`;
   document.getElementById("ticketResult").innerHTML = ""; document.getElementById("ticketModal").classList.add("show");
 };
+
 async function confirmTicket() {
   if (!selectedRoute) return;
-  try { const result = await api("/tickets", { method:"POST", body:JSON.stringify({ routeId:selectedRoute.id }) }); document.getElementById("ticketResult").innerHTML = `<div class="ticket-success">تم الحجز بنجاح 🎉<br>كود التذكرة: <strong>${result.data.id}</strong></div>`; toast("تم حجز التذكرة بنجاح"); }
-  catch (error) { document.getElementById("ticketResult").innerHTML = `<div class="ticket-success">${error.message}</div>`; }
+  const payment = document.querySelector('input[name="paymentMethod"]:checked')?.value || "cash";
+  const price = Number(selectedRoute.fare) || 0;
+  if (payment === "wallet" && getWalletBalance() < price) {
+    document.getElementById("ticketResult").innerHTML = `<div class="ticket-warning">الرصيد غير كافٍ. اشحني المحفظة أولًا أو اختاري الدفع كاش.</div>`;
+    return;
+  }
+  try {
+    const result = await api("/tickets", { method:"POST", body:JSON.stringify({ routeId:selectedRoute.id, paymentMethod:payment }) });
+    if (payment === "wallet") setWalletBalance(getWalletBalance() - price);
+    const methodLabel = payment === "wallet" ? "المحفظة الإلكترونية" : "كاش";
+    document.getElementById("ticketResult").innerHTML = `<div class="ticket-success">تم الحجز بنجاح 🎉<br>كود التذكرة: <strong>${result.data.id}</strong><br>الدفع: ${methodLabel}${payment === "wallet" ? `<br>الرصيد المتبقي: ${getWalletBalance()} ج` : ""}</div>`;
+    updateWalletUI(); toast("تم حجز التذكرة بنجاح");
+  } catch (error) { document.getElementById("ticketResult").innerHTML = `<div class="ticket-warning">${error.message}</div>`; }
 }
 
 async function loadNotifications() {
@@ -136,4 +150,88 @@ document.getElementById("resetAccessibility").addEventListener("click",()=>{ loc
 document.getElementById("menuBtn").addEventListener("click",()=>{ const nav=document.getElementById("mainNav"), btn=document.getElementById("menuBtn"); nav.classList.toggle("mobile-open"); btn.setAttribute("aria-expanded",nav.classList.contains("mobile-open")); });
 document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&(document.activeElement===fromInput||document.activeElement===toInput)) searchRoutes(); if(e.key==="Escape") closeModals(); });
 
+function getWalletBalance(){ return Number(localStorage.getItem("waslniWalletBalance") ?? 120); }
+function setWalletBalance(value){ localStorage.setItem("waslniWalletBalance",String(Math.max(0,Number(value)||0))); }
+function updateWalletUI(){ const el=document.getElementById("walletBalance"); if(el) el.textContent=`${getWalletBalance()} ج`; }
+function showWalletMessage(message){ const el=document.getElementById("walletMessage"); if(el){el.textContent=message; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),2200);} }
+
+function injectEnhancementStyles(){
+  if(document.getElementById("waslniEnhancementStyles")) return;
+  const style=document.createElement("style"); style.id="waslniEnhancementStyles";
+  style.textContent=`
+  .enh-section{margin-top:42px;margin-bottom:42px}.enh-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:20px}.enh-header h2{margin:4px 0}.enh-header p{margin:0;color:#71808b}.audience-switch{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.audience-card,.wallet-card,.vehicle-card,.testimonial-card,.normal-feature{background:#fff;border:1px solid #dce7ec;border-radius:18px;padding:18px;box-shadow:0 7px 25px #102a4310}.audience-card{cursor:pointer;transition:.2s}.audience-card.active{border-color:#168c8c;box-shadow:0 8px 28px #168c8c20}.audience-card h3{margin:6px 0}.audience-card p{color:#71808b;font-size:13px;margin:0}.normal-features-grid,.vehicle-grid,.testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.normal-feature h3,.vehicle-card h3,.testimonial-card h3{margin:7px 0}.normal-feature p,.vehicle-card p,.testimonial-card p{color:#71808b;font-size:12px}.feature-icon{font-size:28px}.wallet-card{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:center;background:linear-gradient(135deg,#102a43,#168c8c);color:#fff;border:0}.wallet-balance{font-size:32px;font-weight:800;margin:5px 0}.wallet-actions{display:flex;gap:8px;flex-wrap:wrap}.wallet-actions input{width:130px;padding:10px;border-radius:10px;border:0;font-family:inherit}.wallet-actions button{padding:10px 14px;border:0;border-radius:10px;background:#fff;color:#102a43;font-weight:700;cursor:pointer}.wallet-note{font-size:10px;opacity:.8}.vehicle-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.vehicle-toolbar select{padding:11px;border:1px solid #dce7ec;border-radius:10px;font-family:inherit;background:#fff}.vehicle-card .vehicle-top{display:flex;justify-content:space-between;gap:8px}.vehicle-badge{background:#e8f6f6;color:#168c8c;border-radius:20px;padding:4px 9px;font-size:10px}.capacity{display:flex;justify-content:space-between;background:#f6fafb;border-radius:10px;padding:10px;margin:10px 0;font-size:12px}.driver-line{display:flex;gap:8px;align-items:center;font-size:12px}.vehicle-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.vehicle-tags span{background:#f0f4f6;border-radius:20px;padding:4px 8px;font-size:10px}.payment-box{margin-top:15px;padding:14px;background:#f6fafb;border:1px solid #dce7ec;border-radius:14px}.payment-box h4{margin:0 0 9px}.payment-option{display:flex;align-items:center;gap:8px;padding:9px 0;font-size:12px}.payment-option span{margin-right:auto;color:#168c8c;font-weight:700}.payment-box small{color:#71808b;font-size:10px}.ticket-warning{margin-top:12px;padding:10px;border-radius:10px;background:#fff5e8;color:#8a5a00;font-size:12px}.testimonials-note{font-size:10px;color:#71808b;margin-top:10px}.testimonial-card .stars{letter-spacing:2px}.testimonial-card small{color:#168c8c}.fleet-filter-empty{grid-column:1/-1;text-align:center;padding:25px;color:#71808b}.user-type-pill{display:inline-block;background:#e8f6f6;color:#168c8c;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700}
+  @media(max-width:850px){.normal-features-grid,.vehicle-grid,.testimonial-grid{grid-template-columns:1fr 1fr}.wallet-card{grid-template-columns:1fr}.enh-header{align-items:flex-start;flex-direction:column}}
+  @media(max-width:560px){.normal-features-grid,.vehicle-grid,.testimonial-grid,.audience-switch{grid-template-columns:1fr}.wallet-balance{font-size:27px}}
+  `; document.head.appendChild(style);
+}
+
+function addEnhancementSections(){
+  if(document.getElementById("waslniEnhancements")) return;
+  const main=document.querySelector("main#home"); const features=document.getElementById("features");
+  if(!main||!features) return;
+  const wrap=document.createElement("div"); wrap.id="waslniEnhancements";
+  wrap.innerHTML=`
+  <section class="container enh-section" id="userTypes"><div class="enh-header"><div><span>FOR EVERY RIDER</span><h2>اختاري تجربة الاستخدام المناسبة لك</h2><p>وصلني مصمم للمستخدم العادي ولذوي الاحتياجات الخاصة، وكل فئة لها أدوات مناسبة.</p></div><span class="user-type-pill" id="currentUserType">👤 مستخدم عادي</span></div><div class="audience-switch"><article class="audience-card active" data-type="normal"><div class="feature-icon">👤</div><h3>المستخدم العادي</h3><p>بحث أسرع، مقارنة الرحلات، اختيار المركبة، الدفع بالمحفظة أو كاش، والتنبيهات.</p></article><article class="audience-card" data-type="access"><div class="feature-icon">♿</div><h3>ذوو الاحتياجات الخاصة</h3><p>فلترة المركبات المجهزة، كرسي متحرك، منحدر، إرشادات صوتية، مقعد أولوية وشاشة مرئية.</p></article></div></section>
+
+  <section class="container enh-section" id="normalFeatures"><div class="enh-header"><div><span>SMART RIDER</span><h2>مميزات إضافية للمستخدمين العاديين</h2><p>أدوات عملية تساعدك تختار الرحلة المناسبة قبل ما تتحرك.</p></div></div><div class="normal-features-grid">
+    <article class="normal-feature"><div class="feature-icon">🔎</div><h3>مقارنة الرحلات</h3><p>قارن الوقت والتكلفة والازدحام قبل اختيار الرحلة.</p></article>
+    <article class="normal-feature"><div class="feature-icon">⏰</div><h3>تذكير بالرحلة</h3><p>احفظ الرحلة المفضلة واحصل على تنبيه قبل موعدها.</p></article>
+    <article class="normal-feature"><div class="feature-icon">📍</div><h3>أقرب محطة</h3><p>اعرف أقرب محطة حسب موقعك الحالي.</p></article>
+    <article class="normal-feature"><div class="feature-icon">🚦</div><h3>حالة الطريق</h3><p>شوف مستوى الازدحام واقترح بديلًا عند الحاجة.</p></article>
+    <article class="normal-feature"><div class="feature-icon">⭐</div><h3>المفضلة</h3><p>احتفظ بالخطوط والمحطات التي تستخدمها كثيرًا.</p></article>
+    <article class="normal-feature"><div class="feature-icon">🧾</div><h3>سجل الرحلات</h3><p>راجع التذاكر السابقة وطريقة الدفع المستخدمة.</p></article>
+  </div></section>
+
+  <section class="container enh-section" id="wallet"><div class="enh-header"><div><span>DIGITAL WALLET</span><h2>محفظتي الإلكترونية 💳</h2><p>ادفع إلكترونيًا من رصيدك أو اختار كاش عند الحجز.</p></div></div><div class="wallet-card"><div><small>الرصيد المتاح</small><div class="wallet-balance" id="walletBalance">120 ج</div><div class="wallet-note">محفظة تجريبية — الرصيد محفوظ على هذا الجهاز فقط.</div></div><div><div class="wallet-actions"><input id="walletTopup" type="number" min="1" step="1" placeholder="قيمة الشحن"><button id="walletTopupBtn">+ شحن الرصيد</button></div><div id="walletMessage" class="wallet-note" style="margin-top:10px"></div></div></div></section>
+
+  <section class="container enh-section" id="vehicles"><div class="enh-header"><div><span>ALL VEHICLES</span><h2>اختار نوع المواصلة والمركبة 🚌</h2><p>كل مركبة موضح لها النوع، سعة الأفراد، المقاعد المتاحة، ونوع السائق.</p></div></div><div class="vehicle-toolbar"><select id="vehicleTypeFilter"><option value="all">كل أنواع المواصلات</option><option value="bus">أتوبيس</option><option value="microbus">ميكروباص</option><option value="car">سيارة</option><option value="motorcycle">دراجة بخارية</option></select><select id="driverGenderFilter"><option value="all">كل السائقين</option><option value="male">سائق</option><option value="female">سائقة</option></select><select id="capacityFilter"><option value="all">كل السعات</option><option value="small">1–4 أفراد</option><option value="medium">5–14 فرد</option><option value="large">15+ فرد</option></select></div><div class="vehicle-grid" id="vehicleGrid"></div></section>
+
+  <section class="container enh-section" id="customerFeedback"><div class="enh-header"><div><span>USER FEEDBACK</span><h2>آراء العملاء ⭐</h2><p>آراء تجريبية مضافة للعرض داخل الـMVP وليست تقييمات حقيقية موثقة.</p></div></div><div class="testimonial-grid" id="testimonialGrid"></div><div class="testimonials-note">مهم: الأسماء والتعليقات التالية Demo Data لا تمثل عملاء حقيقيين أو نتائج استطلاع فعلي.</div></section>`;
+  main.insertBefore(wrap,features);
+
+  document.querySelectorAll(".audience-card").forEach(card=>card.addEventListener("click",()=>{
+    document.querySelectorAll(".audience-card").forEach(c=>c.classList.remove("active")); card.classList.add("active");
+    const access=card.dataset.type==="access"; document.getElementById("currentUserType").textContent=access?"♿ تجربة وصول مخصصة":"👤 مستخدم عادي";
+    document.getElementById("normalFeatures").scrollIntoView({behavior:"smooth",block:"start"});
+    if(access) document.getElementById("accessibility").scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+
+  const vehicles=[
+    {type:"bus",label:"أتوبيس",icon:"🚌",id:"BUS-12",capacity:30,available:12,driver:"محمود",gender:"male",features:["مقاعد أولوية","تتبع مباشر","شاشة مرئية"]},
+    {type:"bus",label:"أتوبيس Accessible",icon:"🚌♿",id:"BUS-A7",capacity:24,available:9,driver:"سارة",gender:"female",features:["منحدر","مكان كرسي متحرك","إرشادات صوتية"]},
+    {type:"microbus",label:"ميكروباص",icon:"🚐",id:"MIC-21",capacity:14,available:5,driver:"أحمد",gender:"male",features:["تكييف","تتبع مباشر","حجز إلكتروني"]},
+    {type:"microbus",label:"ميكروباص Accessible",icon:"🚐♿",id:"MIC-A4",capacity:11,available:4,driver:"نور",gender:"female",features:["منحدر","مقعد أولوية","شاشة مرئية"]},
+    {type:"car",label:"سيارة",icon:"🚗",id:"CAR-31",capacity:4,available:2,driver:"محمد",gender:"male",features:["حجز مسبق","دفع إلكتروني","تكييف"]},
+    {type:"car",label:"سيارة",icon:"🚙",id:"CAR-32",capacity:4,available:3,driver:"ملك",gender:"female",features:["حجز مسبق","دفع إلكتروني","تكييف"]},
+    {type:"motorcycle",label:"دراجة بخارية",icon:"🏍️",id:"MOTO-08",capacity:1,available:1,driver:"يوسف",gender:"male",features:["رحلة فردية","حجز مسبق","تتبع مباشر"]}
+  ];
+  function renderVehicles(){
+    const type=document.getElementById("vehicleTypeFilter").value, gender=document.getElementById("driverGenderFilter").value, cap=document.getElementById("capacityFilter").value;
+    const list=vehicles.filter(v=>{
+      const capOk=cap==="all"||(cap==="small"&&v.capacity<=4)||(cap==="medium"&&v.capacity>=5&&v.capacity<=14)||(cap==="large"&&v.capacity>=15);
+      return (type==="all"||v.type===type)&&(gender==="all"||v.gender===gender)&&capOk;
+    });
+    document.getElementById("vehicleGrid").innerHTML=list.length?list.map(v=>`<article class="vehicle-card"><div class="vehicle-top"><span class="vehicle-badge">${v.id}</span><span>${v.icon}</span></div><h3>${v.label}</h3><div class="driver-line">👤 ${v.gender==="female"?"سائقة":"سائق"}: <strong>${v.driver}</strong></div><div class="capacity"><span>👥 سعة المركبة: <strong>${v.capacity} فرد</strong></span><span>🟢 متاح: <strong>${v.available}</strong></span></div><div class="vehicle-tags">${v.features.map(f=>`<span>${f}</span>`).join("")}</div></article>`).join(""):`<div class="fleet-filter-empty">لا توجد مركبات مطابقة للفلاتر.</div>`;
+  }
+  ["vehicleTypeFilter","driverGenderFilter","capacityFilter"].forEach(id=>document.getElementById(id).addEventListener("change",renderVehicles)); renderVehicles();
+
+  const feedback=[
+    {name:"أحمد — طالب",text:"عجبني إني أعرف وقت الرحلة والتكلفة قبل ما أتحرك.",stars:5},
+    {name:"سارة — موظفة",text:"اختيار وسيلة الدفع كاش أو محفظة خلّى الحجز أوضح.",stars:5},
+    {name:"محمد — طالب",text:"الخريطة والتتبع المباشر من أكتر الحاجات المفيدة بالنسبة لي.",stars:4},
+    {name:"نور — موظفة",text:"فكرة فلترة المركبات حسب السعة ونوعها سهلة جدًا.",stars:5},
+    {name:"مريم — طالبة",text:"التنبيهات والمفضلة بيوفروا وقت في كل رحلة.",stars:5},
+    {name:"يوسف — موظف",text:"اختيارات Accessibility واضحة وسهلة الاستخدام.",stars:4}
+  ];
+  document.getElementById("testimonialGrid").innerHTML=feedback.map(f=>`<article class="testimonial-card"><div class="stars">${"★".repeat(f.stars)}${"☆".repeat(5-f.stars)}</div><p>“${f.text}”</p><small>${f.name}</small></article>`).join("");
+}
+
+function initWallet(){
+  updateWalletUI();
+  const btn=document.getElementById("walletTopupBtn"), input=document.getElementById("walletTopup");
+  if(btn) btn.addEventListener("click",()=>{ const amount=Number(input.value); if(!amount||amount<1){showWalletMessage("اكتبي قيمة صحيحة للشحن.");return;} setWalletBalance(getWalletBalance()+amount); input.value=""; updateWalletUI(); showWalletMessage(`تمت إضافة ${amount} ج إلى المحفظة التجريبية.`); });
+}
+
 initMap(); loadRoutes(); loadNotifications(); loadAccessibility();
+
+injectEnhancementStyles(); addEnhancementSections(); initWallet();
